@@ -1,3 +1,5 @@
+mod server;
+
 use std::{
     fs,
     io::{BufRead, BufReader, Write},
