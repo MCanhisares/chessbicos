@@ -1,0 +1,15 @@
+syntax = "proto3";
+package chess;
+
+service Match {
+  rpc MovePiece (MoveRequest) returns (MoveResponse);
+}
+
+message MoveRequest {
+  string move = 1;
+}
+
+message MoveResponse {
+  bool success = 1;
+  string board_state = 2;
+}
