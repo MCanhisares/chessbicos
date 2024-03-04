@@ -1,5 +1,8 @@
 use tonic::{transport::Server, Request, Response, Status};
 pub mod chess {
+    mod game;
+    mod board;
+    mod pieces;
     tonic::include_proto!("chess"); // The string specified here must match the proto package name
 }
 use chess::match_server::{Match, MatchServer};
