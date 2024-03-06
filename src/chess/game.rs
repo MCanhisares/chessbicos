@@ -2,7 +2,47 @@ use super::{
     board::{Board, Square},
     pieces::{Color, Kind, Piece},
 };
+struct ChessMove {
+    piece: Piece,
+    to: Square,
+    promotion: Option<Kind>,
+    castling: bool,
+}
 
+impl ChessMove {
+    pub fn from_pgn(color: Color, pgn: &str) -> Option<ChessMove> {
+        return {
+            let mut chars = pgn.chars();
+            let piece = match chars.next() {
+                Some('N') => Piece::new(color, Kind::Knight),
+                Some('B') => Piece::new(color, Kind::Bishop),
+                Some('R') => Piece::new(color, Kind::Rook),
+                Some('Q') => Piece::new(color, Kind::Queen),
+                Some('K') => Piece::new(color, Kind::King),
+                Some(_) => Piece::new(color, Kind::Pawn),
+                _ => return None,
+            };
+            let to = Square::from_pgn(&mut chars)?;
+            let promotion = match chars.next() {
+                Some('=') => Some(Piece::from_char(chars.next()?)?.kind),
+                _ => None,
+            };
+            let castling = match chars.next() {
+                Some('O') => match chars.next() {
+                    Some('-') => true,
+                    _ => false,
+                },
+                _ => false,
+            };
+            Some(ChessMove {
+                piece,
+                to,
+                promotion,
+                castling,
+            })
+        };
+    }
+}
 //Game state represented in FEN notation https://www.chessprogramming.org/Forsyth-Edwards_Notation
 struct Game {
     board: Board,
@@ -20,7 +60,7 @@ struct Game {
 impl Game {
     pub fn new() -> Game {
         Game {
-            board: Board::new(),
+            board: Board::default(),
             turn: Color::White,
             castling: Some((
                 Some(Piece::new(Color::White, Kind::King)),
@@ -32,5 +72,13 @@ impl Game {
             halfmove: 0,
             fullmove: 1,
         }
+    }
+
+    pub fn play_move(self, player: Color, pgn_move: &str) -> bool {
+        if self.turn != player {
+            return false;
+        }
+        let chess_move = ChessMove::from_pgn(player, pgn_move);
+        return true;
     }
 }
