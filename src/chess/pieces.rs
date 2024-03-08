@@ -51,12 +51,12 @@ impl Piece {
     ) -> Vec<Square> {
         let mut moves: Vec<Square> = Vec::new();
         for (dx, dy) in candidate_moves.iter() {
-            let mut new_file = square.file + dx;
-            let mut new_rank = square.rank + dy;
+            let mut new_file = square.file as i8 + dx;
+            let mut new_rank = square.rank as i8 + dy;
 
             // Check if the new position is within the board
             while new_file >= 0 && new_file < 8 && new_rank >= 0 && new_rank < 8 {
-                moves.push(Square::new(new_file, new_rank));
+                moves.push(Square::new(new_file as usize, new_rank as usize));
                 if increment {
                     new_file += dx;
                     new_rank += dy;
@@ -201,6 +201,7 @@ impl Color {
     }
 }
 
+#[derive(PartialEq)]
 pub enum Kind {
     Pawn,
     Knight,
