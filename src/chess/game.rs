@@ -169,9 +169,12 @@ impl ChessMove {
 //Game state represented in FEN notation https://www.chessprogramming.org/Forsyth-Edwards_Notation
 struct Game {
     board: Board,
+    //b or w
     turn: Color,
+    // K Q k q
     // If neither side can castle, the symbol '-' is used, otherwise each of four individual castling rights for king and queen castling for both sides are indicated by a sequence of one to four letters.
     castling: Option<(Option<Piece>, Option<Piece>, Option<Piece>, Option<Piece>)>,
+    // e3
     //The en passant target square is specified after a double push of a pawn, no matter whether an en passant capture is really possible or not. Other moves than double pawn pushes imply the symbol '-' for this FEN field.
     en_passant: Option<Square>,
     // The halfmove clock specifies a decimal number of half moves with respect to the 50 move draw rule. It is reset to zero after a capture or a pawn move and incremented otherwise.
@@ -181,7 +184,7 @@ struct Game {
 }
 
 impl Game {
-    pub fn new() -> Game {        
+    pub fn new() -> Game {
         Game {
             board: Board::default(),
             turn: Color::White,
@@ -208,7 +211,7 @@ impl Game {
         let mut board = self.board;
         let success = board.play_move(&chess_move.unwrap());
         if success {
-          self.board = board
+            self.board = board
         }
         success
     }

@@ -1,10 +1,10 @@
 use super::board::Square;
 
+#[derive(PartialEq)]
 pub struct Piece {
     pub color: Color,
     pub kind: Kind,
 }
-
 impl Piece {
     pub fn new(color: Color, kind: Kind) -> Piece {
         Piece { color, kind }
@@ -66,7 +66,7 @@ impl Piece {
         moves
     }
 
-    pub fn r#move(&self, square: Square) -> Vec<Square> {
+    pub fn move_piece(&self, square: Square) -> Vec<Square> {
         let mut moves: Vec<Square> = Vec::new();
         let file = square.file;
         let rank = square.rank;
