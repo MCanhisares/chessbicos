@@ -1,6 +1,6 @@
 use super::board::Square;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 pub struct Piece {
     pub color: Color,
     pub kind: Kind,
@@ -178,7 +178,7 @@ impl Piece {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum Color {
     White,
     Black,
@@ -201,7 +201,7 @@ impl Color {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum Kind {
     Pawn,
     Knight,

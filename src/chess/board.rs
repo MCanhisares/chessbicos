@@ -4,6 +4,7 @@ use super::{
     game::ChessMove,
     pieces::{Color, Kind, Piece},
 };
+
 pub struct Board {
     squares: [Option<Piece>; 64],
     castling: Option<(Option<Piece>, Option<Piece>, Option<Piece>, Option<Piece>)>,
@@ -92,34 +93,47 @@ impl Board {
         unimplemented!()
     }
 
-    pub fn to_fen(&self) -> String {
-        unimplemented!()
+    pub fn print_board(&self) -> String {
+        let mut board_str = String::new();
+        for sq in self.squares.iter().enumerate().rev() {
+            let piece = match sq.1 {
+                Some(p) => p.as_char(),
+                None => '.',
+            };
+            board_str.push(piece);
+            board_str.push(' ');
+            if sq.0 % 8 == 0 {
+                board_str.push('\n');
+            }
+        }
+
+        board_str
     }
 
-    pub fn play_move(&mut self, chess_move: &ChessMove, player: Color) -> bool {
+    pub fn play_move(&mut self, chess_move: &ChessMove, player: &Color) -> bool {
         //Castling requires no to or from squares
         if chess_move.castling.is_some() {
-            return self.castle(player, chess_move.castling.unwrap());
+            return self.castle(player, &chess_move.castling.as_ref().unwrap());
         }
-        let piece = chess_move.piece;
+        let piece = &chess_move.piece;
         //Check if promotion is valid
-        let promoted_piece = match chess_move.promotion {
+        let promoted_piece = match &chess_move.promotion {
             Some(kind) => {
                 if piece.kind != Kind::Pawn {
                     return false;
                 }
-                Some(Piece::new(player, kind))
+                Some(Piece::new(player.clone(), kind.clone()))
             }
             None => None,
         };
         //If no to square is provided, move is invalid
-        let to_square = match chess_move.to {
+        let to_square = match &chess_move.to {
             Some(square) => square,
             None => return false,
         };
         //From square can be provided; if not provided we need to find from candidate pieces
-        let from_square: Option<Square> = match chess_move.from_square {
-            Some(square) => Some(square),
+        let from_square: Option<Square> = match &chess_move.from_square {
+            Some(square) => Some(square.clone()),
             None => {
                 if chess_move.from_file.is_none() || chess_move.from_rank.is_none() {
                     None
@@ -134,49 +148,68 @@ impl Board {
         //If from square is provided, we need to check if the piece is in the correct position
         //If not, the move is invalid
         //If true, we move the piece into the new square
-        //TODO: Check for promotion
         if from_square.is_some() {
             let from_square = from_square.unwrap();
             if let Some(p) = self.squares[from_square.to_1d_arr_coordinates()] {
-                if p.color != player || p.kind != piece.kind {
+                if p.color != *player || p.kind != piece.kind {
                     return false;
                 }
-                self.move_piece(from_square, to_square, promoted_piece);                
+                return self.move_piece(&from_square, &to_square, promoted_piece);
             } else {
                 return false;
             }
         }
 
-        let candidate_pieces = match from_square {
-            Some(square) => match self.squares[square.to_1d_arr_coordinates()] {
-                Some(p) => {
-                    if p.color == player && p.kind == piece.kind {
-                        let mut pieces = Vec::new();
-                        pieces.push(Some(p));
-                        pieces
-                    } else {
-                        return false;
+        if chess_move.from_file.is_some() {
+            let file = chess_move.from_file.unwrap();
+            for rank in 0..8 {
+                if let Some(p) = self.squares[Square::new(file, rank).to_1d_arr_coordinates()] {
+                    if p.color == *player && p.kind == piece.kind {
+                        return self.move_piece(
+                            &Square::new(file, rank),
+                            to_square,
+                            promoted_piece,
+                        );
                     }
                 }
-                None => return false,
-            },
-            None => {
-                let mut pieces = Vec::new();
-                for (i, p) in self.squares.iter().enumerate() {
-                    if let Some(p) = p {
-                        if p.color == player && p.kind == piece.kind {
-                            pieces.push(Some(*p));
-                        }
-                    }
-                }
-                pieces
             }
-        };
+        }
+
+        if chess_move.from_rank.is_some() {
+            let rank = chess_move.from_rank.unwrap();
+            for file in 0..8 {
+                if let Some(p) = self.squares[Square::new(file, rank).to_1d_arr_coordinates()] {
+                    if p.color == *player && p.kind == piece.kind {
+                        return self.move_piece(
+                            &Square::new(file, rank),
+                            to_square,
+                            promoted_piece,
+                        );
+                    }
+                }
+            }
+        }
+
+        for square in self.squares.iter().enumerate() {
+            if let Some(p) = square.1 {
+                if p.color == *player && p.kind == piece.kind {
+                    let candidate_square = Square::new_from_1d_arr_coordinates(square.0);
+                    let candidate_moves = p.move_piece(candidate_square);
+                    if candidate_moves.contains(&to_square) {
+                        return self.move_piece(
+                            &Square::new_from_1d_arr_coordinates(square.0),
+                            to_square,
+                            promoted_piece,
+                        );
+                    }
+                }
+            }
+        }
 
         false
     }
 
-    pub fn castle(&mut self, color: Color, kind: Kind) -> bool {
+    pub fn castle(&mut self, color: &Color, kind: &Kind) -> bool {
         let king_square = match color {
             Color::White => Square::from_san_str("a5"),
             Color::Black => Square::from_san_str("h5"),
@@ -244,27 +277,27 @@ impl Board {
         match (color, kind) {
             (Color::White, Kind::King) => {
                 //Move the rook from h1 to f1
-                self.move_piece(rook_square, Square::from_san_str("h1").unwrap(), None);
+                self.move_piece(&rook_square, &Square::from_san_str("h1").unwrap(), None);
                 //Move the king from e1 to g1
-                self.move_piece(king_square, Square::from_san_str("g1").unwrap(), None);
+                self.move_piece(&king_square, &Square::from_san_str("g1").unwrap(), None);
             }
             (Color::White, Kind::Queen) => {
                 //Move the rook from a1 to d1
-                self.move_piece(rook_square, Square::from_san_str("d1").unwrap(), None);
+                self.move_piece(&rook_square, &Square::from_san_str("d1").unwrap(), None);
                 //Move the king from e1 to c1
-                self.move_piece(king_square, Square::from_san_str("c1").unwrap(), None);
+                self.move_piece(&king_square, &Square::from_san_str("c1").unwrap(), None);
             }
             (Color::Black, Kind::King) => {
                 //Move the rook from h8 to f8
-                self.move_piece(rook_square, Square::from_san_str("f8").unwrap(), None);
+                self.move_piece(&rook_square, &Square::from_san_str("f8").unwrap(), None);
                 //Move the king from e8 to g8
-                self.move_piece(king_square, Square::from_san_str("g8").unwrap(), None);
+                self.move_piece(&king_square, &Square::from_san_str("g8").unwrap(), None);
             }
             (Color::Black, Kind::Queen) => {
                 //Move the rook from a8 to d8
-                self.move_piece(rook_square, Square::from_san_str("d8").unwrap(), None);
+                self.move_piece(&rook_square, &Square::from_san_str("d8").unwrap(), None);
                 //Move the king from e8 to c8
-                self.move_piece(king_square, Square::from_san_str("c8").unwrap(), None);
+                self.move_piece(&king_square, &Square::from_san_str("c8").unwrap(), None);
             }
             _ => return false,
         }
@@ -273,9 +306,9 @@ impl Board {
     }
 
     fn move_piece(
-        &self,
-        from_square: Square,
-        to_square: Square,
+        &mut self,
+        from_square: &Square,
+        to_square: &Square,
         promoted_piece: Option<Piece>,
     ) -> bool {
         self.move_piece_coordinate(
@@ -286,17 +319,12 @@ impl Board {
     }
 
     fn move_piece_coordinate(
-        &self,
+        &mut self,
         from_square: usize,
         to_square: usize,
         promoted_piece: Option<Piece>,
     ) -> bool {
-        if from_square < 0
-            || from_square > 63
-            || to_square < 0
-            || to_square > 63
-            || from_square == to_square
-        {
+        if from_square > 63 || to_square > 63 || from_square == to_square {
             return false;
         }
 
@@ -306,6 +334,7 @@ impl Board {
     }
 }
 
+#[derive(PartialEq, Clone)]
 pub struct Square {
     pub file: usize,
     pub rank: usize,
@@ -316,8 +345,15 @@ impl Square {
         Square { file, rank }
     }
 
+    pub fn new_from_1d_arr_coordinates(coordinates: usize) -> Square {
+        Square {
+            file: coordinates % 8,
+            rank: coordinates / 8,
+        }
+    }
+
     pub fn to_1d_arr_coordinates(&self) -> usize {
-        self.file * 8 + self.rank
+        self.rank * 8 + self.file
     }
 
     pub fn from_san_str(san_str: &str) -> Option<Square> {

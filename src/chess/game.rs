@@ -13,11 +13,11 @@ pub struct ChessMove {
 }
 
 impl ChessMove {
-    pub fn from_san(color: Color, san: &str) -> Option<ChessMove> {
+    pub fn from_san(color: &Color, san: &str) -> Option<ChessMove> {
         // O-O or O-O-O
         if san == "O-O" {
             return Some(ChessMove {
-                piece: Piece::new(color, Kind::King),
+                piece: Piece::new(color.clone(), Kind::King),
                 from_square: None,
                 from_file: None,
                 from_rank: None,
@@ -28,7 +28,7 @@ impl ChessMove {
         }
         if san == "O-O-O" {
             return Some(ChessMove {
-                piece: Piece::new(color, Kind::King),
+                piece: Piece::new(color.clone(), Kind::King),
                 from_square: None,
                 from_file: None,
                 from_rank: None,
@@ -45,12 +45,12 @@ impl ChessMove {
 
         // Find what piece is moving
         let piece = match chars[0] {
-            'N' => Piece::new(color, Kind::Knight),
-            'B' => Piece::new(color, Kind::Bishop),
-            'R' => Piece::new(color, Kind::Rook),
-            'Q' => Piece::new(color, Kind::Queen),
-            'K' => Piece::new(color, Kind::King),
-            _ => Piece::new(color, Kind::Pawn),
+            'N' => Piece::new(color.clone(), Kind::Knight),
+            'B' => Piece::new(color.clone(), Kind::Bishop),
+            'R' => Piece::new(color.clone(), Kind::Rook),
+            'Q' => Piece::new(color.clone(), Kind::Queen),
+            'K' => Piece::new(color.clone(), Kind::King),
+            _ => Piece::new(color.clone(), Kind::Pawn),
         };
 
         // Capture
@@ -167,7 +167,7 @@ impl ChessMove {
     }
 }
 //Game state represented in FEN notation https://www.chessprogramming.org/Forsyth-Edwards_Notation
-struct Game {
+pub struct Game {
     board: Board,
     //b or w
     turn: Color,
@@ -200,19 +200,19 @@ impl Game {
         }
     }
 
-    pub fn play_move(mut self, player: Color, san_move: &str) -> bool {
-        if self.turn != player {
+    pub fn print_board(&self) -> String {
+      self.board.print_board()
+    }
+
+    pub fn play_move(&mut self, player: &Color, san_move: &str) -> bool {
+        if self.turn != *player {
             return false;
         }
         let chess_move = ChessMove::from_san(player, san_move);
         if chess_move.is_none() {
             return false;
         }
-        let mut board = self.board;
-        let success = board.play_move(&chess_move.unwrap());
-        if success {
-            self.board = board
-        }
-        success
+        let success = &self.board.play_move(&chess_move.unwrap(), player);        
+        *success
     }
 }
