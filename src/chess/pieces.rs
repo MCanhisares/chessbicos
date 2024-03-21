@@ -1,6 +1,7 @@
-use super::board::Square;
+use super::square::Square;
 
-#[derive(PartialEq, Clone, Copy)]
+
+#[derive(PartialEq, Clone, Copy, Debug)]
 pub struct Piece {
     pub color: Color,
     pub kind: Kind,
@@ -67,7 +68,6 @@ impl Piece {
     }
 
     pub fn move_piece(&self, square: Square) -> Vec<Square> {
-        let mut moves: Vec<Square> = Vec::new();
         let file = square.file;
         let rank = square.rank;
         match self.kind {
@@ -178,7 +178,7 @@ impl Piece {
     }
 }
 
-#[derive(PartialEq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy, Debug)]
 pub enum Color {
     White,
     Black,
@@ -201,7 +201,7 @@ impl Color {
     }
 }
 
-#[derive(PartialEq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy, Debug)]
 pub enum Kind {
     Pawn,
     Knight,

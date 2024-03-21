@@ -1,6 +1,7 @@
 use super::{
-    board::{Board, Square},
-    pieces::{Color, Kind, Piece},
+    board::Board,
+    pieces::{Color, Kind, Piece}, 
+    square::Square,
 };
 pub struct ChessMove {
     pub piece: Piece,
@@ -201,7 +202,7 @@ impl Game {
     }
 
     pub fn print_board(&self) -> String {
-      self.board.print_board()
+        self.board.print_board()
     }
 
     pub fn play_move(&mut self, player: &Color, san_move: &str) -> bool {
@@ -212,7 +213,7 @@ impl Game {
         if chess_move.is_none() {
             return false;
         }
-        let success = &self.board.play_move(&chess_move.unwrap(), player);        
+        let success = &self.board.play_move(&chess_move.unwrap(), player);
         *success
     }
 }

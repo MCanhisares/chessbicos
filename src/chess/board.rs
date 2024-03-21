@@ -1,13 +1,12 @@
-use std::slice::Iter;
-
 use super::{
     game::ChessMove,
     pieces::{Color, Kind, Piece},
+    square::Square,
 };
 
 pub struct Board {
     squares: [Option<Piece>; 64],
-    castling: Option<(Option<Piece>, Option<Piece>, Option<Piece>, Option<Piece>)>,
+    castling: [Option<Piece>; 4],
 }
 
 impl Board {
@@ -80,12 +79,12 @@ impl Board {
                 Some(Piece::new(Color::Black, Kind::Rook)),
             ],
             // K Q k q
-            castling: Some((
+            castling: [
                 Some(Piece::new(Color::White, Kind::King)),
                 Some(Piece::new(Color::White, Kind::Queen)),
                 Some(Piece::new(Color::Black, Kind::King)),
                 Some(Piece::new(Color::Black, Kind::Queen)),
-            )),
+            ],
         }
     }
 
@@ -210,6 +209,11 @@ impl Board {
     }
 
     pub fn castle(&mut self, color: &Color, kind: &Kind) -> bool {
+        let castling_piece = Piece::new(color.clone(), kind.clone());
+        if !self.castling.contains(&Some(castling_piece)) {
+            return false;
+        }
+
         let king_square = match color {
             Color::White => Square::from_san_str("e1"),
             Color::Black => Square::from_san_str("e8"),
@@ -334,78 +338,23 @@ impl Board {
     }
 }
 
-#[derive(PartialEq, Clone)]
-pub struct Square {
-    pub file: usize,
-    pub rank: usize,
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-impl Square {
-    pub fn new(file: usize, rank: usize) -> Square {
-        Square { file, rank }
+    #[test]
+    fn test_move_piece() {
+        let mut board = Board::default();
+        let from_square = Square::from_san_str("e2").unwrap();
+        let to_square = Square::from_san_str("e4").unwrap();
+
+        assert!(board.move_piece(&from_square, &to_square, None));
+        assert_eq!(board.squares[from_square.to_1d_arr_coordinates()], None);
+        assert_eq!(
+            board.squares[to_square.to_1d_arr_coordinates()],
+            Some(Piece::new(Color::White, Kind::Pawn))
+        );
     }
 
-    pub fn new_from_1d_arr_coordinates(coordinates: usize) -> Square {
-        Square {
-            file: coordinates % 8,
-            rank: coordinates / 8,
-        }
-    }
-
-    pub fn to_1d_arr_coordinates(&self) -> usize {
-        self.rank * 8 + self.file
-    }
-
-    pub fn from_san_str(san_str: &str) -> Option<Square> {
-        let mut chars = san_str.chars();
-        let file = match chars.next()? {
-            'a' => 0,
-            'b' => 1,
-            'c' => 2,
-            'd' => 3,
-            'e' => 4,
-            'f' => 5,
-            'g' => 6,
-            'h' => 7,
-            _ => return None,
-        };
-        let rank = match chars.next()? {
-            '1' => 0,
-            '2' => 1,
-            '3' => 2,
-            '4' => 3,
-            '5' => 4,
-            '6' => 5,
-            '7' => 6,
-            '8' => 7,
-            _ => return None,
-        };
-        Some(Square { file, rank })
-    }
-
-    pub fn from_san(chars: &mut Iter<char>) -> Option<Square> {
-        let file = match chars.next()? {
-            'a' => 0,
-            'b' => 1,
-            'c' => 2,
-            'd' => 3,
-            'e' => 4,
-            'f' => 5,
-            'g' => 6,
-            'h' => 7,
-            _ => return None,
-        };
-        let rank = match chars.next()? {
-            '1' => 0,
-            '2' => 1,
-            '3' => 2,
-            '4' => 3,
-            '5' => 4,
-            '6' => 5,
-            '7' => 6,
-            '8' => 7,
-            _ => return None,
-        };
-        Some(Square { file, rank })
-    }
+    // Add more tests for other board functionalities
 }
