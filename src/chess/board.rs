@@ -211,8 +211,8 @@ impl Board {
 
     pub fn castle(&mut self, color: &Color, kind: &Kind) -> bool {
         let king_square = match color {
-            Color::White => Square::from_san_str("a5"),
-            Color::Black => Square::from_san_str("h5"),
+            Color::White => Square::from_san_str("e1"),
+            Color::Black => Square::from_san_str("e8"),
         }
         .unwrap();
 

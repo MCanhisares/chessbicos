@@ -55,7 +55,7 @@ impl Piece {
             let mut new_rank = square.rank as i8 + dy;
 
             // Check if the new position is within the board
-            while new_file >= 0 && new_file < 8 && new_rank >= 0 && new_rank < 8 {
+            if new_file >= 0 && new_file < 8 && new_rank >= 0 && new_rank < 8 {
                 moves.push(Square::new(new_file as usize, new_rank as usize));
                 if increment {
                     new_file += dx;
