@@ -1,5 +1,5 @@
 syntax = "proto3";
-package chess;
+package chess_server;
 
 service Match {
   rpc MovePiece (MoveRequest) returns (MoveResponse);
