@@ -185,17 +185,17 @@ pub enum Color {
 }
 
 impl Color {
-    fn as_char(&self) -> char {
+    pub fn as_str(&self) -> &str {
         match self {
-            Color::White => 'w',
-            Color::Black => 'b',
+            Color::White => "w",
+            Color::Black => "b",
         }
     }
 
-    fn from_char(c: char) -> Option<Color> {
-        match c {
-            'w' => Some(Color::White),
-            'b' => Some(Color::Black),
+    pub fn from_str(s: &str) -> Option<Color> {
+        match s {
+            "w" => Some(Color::White),
+            "b" => Some(Color::Black),
             _ => None,
         }
     }

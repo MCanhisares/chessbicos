@@ -6,10 +6,13 @@ service Match {
 }
 
 message MoveRequest {
-  string move = 1;
+  string match_id = 1;
+  string pgn_move = 2;
+  string player_color = 3;
 }
 
 message MoveResponse {
-  bool success = 1;
-  string board_state = 2;
+  string match_id = 1;
+  bool success = 2;
+  string board_state = 3;  
 }
