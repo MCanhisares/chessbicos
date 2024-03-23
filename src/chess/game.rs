@@ -1,170 +1,24 @@
 use super::{
     board::Board,
-    pieces::{Color, Kind, Piece}, 
+    chess_move::ChessMove,
+    pieces::{Color, Kind, Piece},
     square::Square,
 };
-pub struct ChessMove {
-    pub piece: Piece,
-    pub from_square: Option<Square>,
-    pub from_file: Option<usize>,
-    pub from_rank: Option<usize>,
-    pub to: Option<Square>,
-    pub promotion: Option<Kind>,
-    pub castling: Option<Kind>,
+use std::fmt;
+
+pub struct GameError;
+
+// Implement std::fmt::Display for AppError
+impl fmt::Display for GameError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "An Error Occurred, Please Try Again!") // user-facing output
+    }
 }
 
-impl ChessMove {
-    pub fn from_san(color: &Color, san: &str) -> Option<ChessMove> {
-        // O-O or O-O-O
-        if san == "O-O" {
-            return Some(ChessMove {
-                piece: Piece::new(color.clone(), Kind::King),
-                from_square: None,
-                from_file: None,
-                from_rank: None,
-                to: None,
-                promotion: None,
-                castling: Some(Kind::King),
-            });
-        }
-        if san == "O-O-O" {
-            return Some(ChessMove {
-                piece: Piece::new(color.clone(), Kind::King),
-                from_square: None,
-                from_file: None,
-                from_rank: None,
-                to: None,
-                promotion: None,
-                castling: Some(Kind::Queen),
-            });
-        }
-
-        let chars: Vec<char> = san.chars().collect();
-        if chars.len() < 2 {
-            return None;
-        }
-
-        // Find what piece is moving
-        let piece = match chars[0] {
-            'N' => Piece::new(color.clone(), Kind::Knight),
-            'B' => Piece::new(color.clone(), Kind::Bishop),
-            'R' => Piece::new(color.clone(), Kind::Rook),
-            'Q' => Piece::new(color.clone(), Kind::Queen),
-            'K' => Piece::new(color.clone(), Kind::King),
-            _ => Piece::new(color.clone(), Kind::Pawn),
-        };
-
-        // Capture
-        // Bxc3 or exc8=Q
-        if chars[1] == 'x' {
-            if chars.len() < 4 {
-                return None;
-            }
-            let mut capture_iter = chars[2..].iter();
-            let to = Square::from_san(&mut capture_iter);
-
-            let promotion = match capture_iter.next() {
-                Some('=') => Some(Piece::from_char(*capture_iter.next()?)?.kind),
-                _ => None,
-            };
-            return Some(ChessMove {
-                piece,
-                from_square: None,
-                from_file: None,
-                from_rank: None,
-                to,
-                promotion,
-                castling: None,
-            });
-        }
-        // Normal move
-        // e4 or Nf3 or Nge2 or Qe2e3 or e8=Q
-        // Pawn moves dont have piece prefix (e4)
-        let first_index = if piece.kind == Kind::Pawn && chars[0].is_ascii_lowercase() {
-            0
-        } else {
-            1
-        };
-        let mut chars_iter = chars[first_index..].iter();
-
-        let first_square = Square::from_san(&mut chars_iter);
-        let second_square = Square::from_san(&mut chars_iter);
-
-        // First and second square found, order is from -> to
-        // Qe2e3
-        if first_square.is_some() && second_square.is_some() {
-            //Promotion not possible
-            return Some(ChessMove {
-                piece,
-                from_square: first_square,
-                from_file: None,
-                from_rank: None,
-                to: second_square,
-                promotion: None,
-                castling: None,
-            });
-        }
-
-        // Only first square is found, so no from square/file/rank
-        if first_square.is_some() && second_square.is_none() {
-            // Still check for promotion e8=Q
-            let mut promotion_iter = chars[first_index + 2..].iter();
-            let promotion = match promotion_iter.next() {
-                Some('=') => Some(Piece::from_char(*promotion_iter.next()?)?.kind),
-                _ => None,
-            };
-            return Some(ChessMove {
-                piece,
-                from_square: None,
-                from_file: None,
-                from_rank: None,
-                to: first_square,
-                promotion,
-                castling: None,
-            });
-        }
-
-        // Only formats left are Nge2 or R1e2
-        // Find from file or rank
-        let file_or_rank = chars[first_index];
-
-        let mut to_square_iter = chars[first_index + 1..].iter();
-        let to = Square::from_san(&mut to_square_iter);
-        // R1e2
-        if file_or_rank.is_numeric() {
-            let rank = file_or_rank.to_digit(10).unwrap() as usize - 1; // 1 indexed
-            return Some(ChessMove {
-                piece,
-                from_square: None,
-                from_file: None,
-                from_rank: Some(rank),
-                to,
-                promotion: None,
-                castling: None,
-            });
-        }
-        // Nge2
-        let file = match file_or_rank {
-            'a' => 0,
-            'b' => 1,
-            'c' => 2,
-            'd' => 3,
-            'e' => 4,
-            'f' => 5,
-            'g' => 6,
-            'h' => 7,
-            _ => return None,
-        };
-
-        Some(ChessMove {
-            piece,
-            from_square: None,
-            from_file: Some(file),
-            from_rank: None,
-            to,
-            promotion: None,
-            castling: None,
-        })
+// Implement std::fmt::Debug for AppError
+impl fmt::Debug for GameError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{{ file: {}, line: {} }}", file!(), line!()) // programmer-facing output
     }
 }
 //Game state represented in FEN notation https://www.chessprogramming.org/Forsyth-Edwards_Notation
@@ -179,9 +33,9 @@ pub struct Game {
     //The en passant target square is specified after a double push of a pawn, no matter whether an en passant capture is really possible or not. Other moves than double pawn pushes imply the symbol '-' for this FEN field.
     en_passant: Option<Square>,
     // The halfmove clock specifies a decimal number of half moves with respect to the 50 move draw rule. It is reset to zero after a capture or a pawn move and incremented otherwise.
-    halfmove: u32,
+    half_move: u32,
     // The number of the full moves in a game. It starts at 1, and is incremented after each Black's move.
-    fullmove: u32,
+    full_move: u32,
 }
 
 impl Game {
@@ -196,13 +50,138 @@ impl Game {
                 Some(Piece::new(Color::Black, Kind::Queen)),
             )),
             en_passant: None,
-            halfmove: 0,
-            fullmove: 1,
+            half_move: 0,
+            full_move: 1,
         }
+    }
+
+    pub fn from_fen(fen_game: &str) -> Result<Game, GameError> {
+        let mut fen_iter = fen_game.split(' ').into_iter();
+        let board = match fen_iter.next() {
+            None => return Err(GameError),
+            Some(s) => Board::from_fen(s),
+        };
+        let color = match fen_iter.next() {
+            None => return Err(GameError),
+            Some(s) => Color::from_str(s),
+        };
+        if color.is_none() {
+            return Err(GameError);
+        }
+        let castling = match fen_iter.next() {
+            None => return Err(GameError),
+            Some(s) => {
+                let mut castling_rights = (None, None, None, None);
+                for c in s.chars() {
+                    match c {
+                        'K' => castling_rights.0 = Some(Piece::new(Color::White, Kind::King)),
+                        'Q' => castling_rights.1 = Some(Piece::new(Color::White, Kind::Queen)),
+                        'k' => castling_rights.2 = Some(Piece::new(Color::Black, Kind::King)),
+                        'q' => castling_rights.3 = Some(Piece::new(Color::Black, Kind::Queen)),
+                        _ => return Err(GameError),
+                    }
+                }
+                Some(castling_rights)
+            }
+        };
+
+        let en_passant = match fen_iter.next() {
+            None => return Err(GameError),
+            Some(s) => {
+                if s == "-" {
+                    None
+                } else {
+                    Square::from_san_str(s)
+                }
+            }
+        };
+
+        let half_move = match fen_iter.next() {
+            None => return Err(GameError),
+            Some(s) => match s.parse::<u32>() {
+                Ok(hm) => hm,
+                Err(_) => return Err(GameError),
+            },
+        };
+
+        let full_move = match fen_iter.next() {
+            None => return Err(GameError),
+            Some(s) => match s.parse::<u32>() {
+                Ok(fm) => fm,
+                Err(_) => return Err(GameError),
+            },
+        };
+
+        let game = Game {
+            board,
+            turn: color.unwrap(),
+            castling,
+            en_passant,
+            half_move,
+            full_move,
+        };
+        Ok(game)
+    }
+
+    pub fn to_fen(&self) -> String {
+        let mut fen = self.board.to_fen();
+        fen.push(' ');
+        fen.push_str(self.turn.as_str());
+        fen.push(' ');
+        let mut castling = String::new();
+        if let Some((wk, wq, bk, bq)) = self.castling {
+            if wk.is_some() {
+                castling.push('K');
+            }
+            if wq.is_some() {
+                castling.push('Q');
+            }
+            if bk.is_some() {
+                castling.push('k');
+            }
+            if bq.is_some() {
+                castling.push('q');
+            }
+        }
+        if castling.is_empty() {
+            fen.push_str("-");
+        } else {
+            fen.push_str(&castling);
+        }
+        fen.push(' ');
+        if let Some(en_passant) = &self.en_passant {
+            fen.push_str(&en_passant.to_san());
+        } else {
+            fen.push_str("-");
+        }
+        fen.push(' ');
+        fen.push_str(&self.half_move.to_string());
+        fen.push(' ');
+        fen.push_str(&self.full_move.to_string());
+        fen
     }
 
     pub fn print_board(&self) -> String {
         self.board.print_board()
+    }
+
+    fn can_castle(&self, color: &Color, kind: &Kind) -> bool {
+        if let Some((wk, wq, bk, bq)) = self.castling {
+            match color {
+                Color::White => match kind {
+                    Kind::King => wk.is_some(),
+                    Kind::Queen => wq.is_some(),
+                    _ => false,
+                },
+                Color::Black => match kind {
+                    Kind::King => bk.is_some(),
+                    Kind::Queen => bq.is_some(),
+                    _ => false,
+                },
+            }
+        } else {
+            false
+        }
     }
 
     pub fn play_move(&mut self, player: &Color, san_move: &str) -> bool {
@@ -210,10 +189,98 @@ impl Game {
             return false;
         }
         let chess_move = ChessMove::from_san(player, san_move);
-        if chess_move.is_none() {
-            return false;
+
+        match chess_move {
+            None => return false,
+            Some(chess_move) => {
+                if chess_move.castling.is_some() {
+                    let kind = chess_move.castling.unwrap();
+                    if !self.can_castle(player, &kind) {
+                        return false;
+                    }
+                }
+                let success = self.board.play_move(&chess_move, player);
+                if success {
+                    self.turn = match self.turn {
+                        Color::White => Color::Black,
+                        Color::Black => Color::White,
+                    };
+                    self.full_move += 1;
+                }
+                success
+            }
         }
-        let success = &self.board.play_move(&chess_move.unwrap(), player);
-        *success
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_game_from_fen() {
+        let game = Game::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        assert!(game.is_ok());
+        let game = game.unwrap();
+        assert_eq!(game.turn, Color::White);
+        assert_eq!(game.half_move, 0);
+        assert_eq!(game.full_move, 1);
+        assert_eq!(
+            game.castling,
+            Some((
+                Some(Piece::new(Color::White, Kind::King)),
+                Some(Piece::new(Color::White, Kind::Queen)),
+                Some(Piece::new(Color::Black, Kind::King)),
+                Some(Piece::new(Color::Black, Kind::Queen))
+            ))
+        );
+        assert_eq!(game.en_passant, None);
+    }
+
+    #[test]
+    fn test_game_to_fen() {
+        let game = Game::new();
+        let fen = game.to_fen();
+        assert_eq!(
+            fen,
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+        );
+    }
+
+    #[test]
+    fn test_game_play_move() {
+        let mut game = Game::new();
+        let success = game.play_move(&Color::White, "e4");
+        assert!(success);
+        let success = game.play_move(&Color::Black, "e5");
+        assert!(success);
+        let success = game.play_move(&Color::White, "Nf3");
+        assert!(success);
+        let success = game.play_move(&Color::Black, "Nc6");
+        assert!(success);
+        let success = game.play_move(&Color::White, "Bb5");
+        assert!(success);
+        let success = game.play_move(&Color::Black, "Bb4");
+        assert!(success);
+        let success = game.play_move(&Color::White, "h3");
+        assert!(success);
+        let success = game.play_move(&Color::Black, "Nf6");
+        assert!(success);
+        let success = game.play_move(&Color::White, "O-O");
+        assert!(success);
+        let success = game.play_move(&Color::Black, "O-O");
+        assert!(success);
+        let success = game.play_move(&Color::White, "d3");
+        assert!(success);
+        let success = game.play_move(&Color::Black, "d6");
+        assert!(success);
+        let success = game.play_move(&Color::White, "c3");
+        assert!(success);
+        let success = game.play_move(&Color::Black, "c6");
+        assert!(success);
+        let success = game.play_move(&Color::White, "Bc4");
+        assert!(success);
+        let success = game.play_move(&Color::Black, "b5");
+        assert!(success);
     }
 }

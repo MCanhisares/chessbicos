@@ -1,6 +1,5 @@
 use super::square::Square;
 
-
 #[derive(PartialEq, Clone, Copy, Debug)]
 pub struct Piece {
     pub color: Color,
@@ -56,12 +55,14 @@ impl Piece {
             let mut new_rank = square.rank as i8 + dy;
 
             // Check if the new position is within the board
-            if new_file >= 0 && new_file < 8 && new_rank >= 0 && new_rank < 8 {
-                moves.push(Square::new(new_file as usize, new_rank as usize));
-                if increment {
+            if increment {
+                while new_file >= 0 && new_file < 8 && new_rank >= 0 && new_rank < 8 {
+                    moves.push(Square::new(new_file as usize, new_rank as usize));
                     new_file += dx;
                     new_rank += dy;
                 }
+            } else if new_file >= 0 && new_file < 8 && new_rank >= 0 && new_rank < 8 {
+                moves.push(Square::new(new_file as usize, new_rank as usize));
             }
         }
         moves
@@ -137,7 +138,7 @@ impl Piece {
             }
             Kind::Bishop => {
                 // Bishop moves
-                let bishop_moves = [(1, 1), (1, -1), (-1, 1), (-1, -1)];
+                let bishop_moves = [(1, 1), (-1, -1), (1, -1), (-1, 1)];
                 self.generate_moves(bishop_moves.to_vec(), square, true)
             }
             Kind::Rook => {
@@ -148,14 +149,14 @@ impl Piece {
             Kind::Queen => {
                 // Queen moves
                 let queen_moves = [
-                    (1, 1),
-                    (1, -1),
-                    (-1, 1),
-                    (-1, -1),
                     (1, 0),
                     (-1, 0),
                     (0, 1),
                     (0, -1),
+                    (1, 1),
+                    (-1, -1),
+                    (1, -1),
+                    (-1, 1),
                 ];
 
                 self.generate_moves(queen_moves.to_vec(), square, true)
@@ -185,17 +186,17 @@ pub enum Color {
 }
 
 impl Color {
-    fn as_char(&self) -> char {
+    pub fn as_str(&self) -> &str {
         match self {
-            Color::White => 'w',
-            Color::Black => 'b',
+            Color::White => "w",
+            Color::Black => "b",
         }
     }
 
-    fn from_char(c: char) -> Option<Color> {
-        match c {
-            'w' => Some(Color::White),
-            'b' => Some(Color::Black),
+    pub fn from_str(s: &str) -> Option<Color> {
+        match s {
+            "w" => Some(Color::White),
+            "b" => Some(Color::Black),
             _ => None,
         }
     }
@@ -211,3 +212,221 @@ pub enum Kind {
     King,
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_piece_as_char() {
+        let piece = Piece::new(Color::White, Kind::Pawn);
+        assert_eq!(piece.as_char(), 'P');
+    }
+
+    #[test]
+    fn test_piece_from_char() {
+        let piece = Piece::from_char('p').unwrap();
+        assert_eq!(piece, Piece::new(Color::Black, Kind::Pawn));
+    }
+
+    #[test]
+    fn test_piece_move_piece_pawn() {
+        let piece = Piece::new(Color::White, Kind::Pawn);
+        let square = Square::new(3, 3);
+        let moves = piece.move_piece(square);
+        assert_eq!(moves.len(), 3);
+        assert_eq!(moves[0].file, 3);
+        assert_eq!(moves[0].rank, 4);
+        assert_eq!(moves[1].file, 4);
+        assert_eq!(moves[1].rank, 4);
+        assert_eq!(moves[2].file, 2);
+        assert_eq!(moves[2].rank, 4);
+    }
+
+    #[test]
+    fn test_piece_move_piece_knight() {
+        let piece = Piece::new(Color::White, Kind::Knight);
+        let square = Square::new(3, 3);
+        let moves = piece.move_piece(square);
+        assert_eq!(moves.len(), 8);
+        assert_eq!(moves[0].file, 5);
+        assert_eq!(moves[0].rank, 4);
+        assert_eq!(moves[1].file, 4);
+        assert_eq!(moves[1].rank, 5);
+        assert_eq!(moves[2].file, 2);
+        assert_eq!(moves[2].rank, 5);
+        assert_eq!(moves[3].file, 1);
+        assert_eq!(moves[3].rank, 4);
+        assert_eq!(moves[4].file, 1);
+        assert_eq!(moves[4].rank, 2);
+        assert_eq!(moves[5].file, 2);
+        assert_eq!(moves[5].rank, 1);
+        assert_eq!(moves[6].file, 4);
+        assert_eq!(moves[6].rank, 1);
+        assert_eq!(moves[7].file, 5);
+        assert_eq!(moves[7].rank, 2);
+    }
+
+    #[test]
+    fn test_piece_move_piece_bishop() {
+        let piece = Piece::new(Color::White, Kind::Bishop);
+        let square = Square::new(3, 3);
+        let moves = piece.move_piece(square);
+        assert_eq!(moves.len(), 13);
+        assert_eq!(moves[0].file, 4);
+        assert_eq!(moves[0].rank, 4);
+        assert_eq!(moves[1].file, 5);
+        assert_eq!(moves[1].rank, 5);
+        assert_eq!(moves[2].file, 6);
+        assert_eq!(moves[2].rank, 6);
+        assert_eq!(moves[3].file, 7);
+        assert_eq!(moves[3].rank, 7);
+        assert_eq!(moves[4].file, 2);
+        assert_eq!(moves[4].rank, 2);
+        assert_eq!(moves[5].file, 1);
+        assert_eq!(moves[5].rank, 1);
+        assert_eq!(moves[6].file, 0);
+        assert_eq!(moves[6].rank, 0);
+        assert_eq!(moves[7].file, 4);
+        assert_eq!(moves[7].rank, 2);
+        assert_eq!(moves[8].file, 5);
+        assert_eq!(moves[8].rank, 1);
+        assert_eq!(moves[9].file, 6);
+        assert_eq!(moves[9].rank, 0);
+        assert_eq!(moves[10].file, 2);
+        assert_eq!(moves[10].rank, 4);
+        assert_eq!(moves[11].file, 1);
+        assert_eq!(moves[11].rank, 5);
+        assert_eq!(moves[12].file, 0);
+        assert_eq!(moves[12].rank, 6);
+    }
+
+    #[test]
+    fn test_piece_move_piece_rook() {
+        let piece = Piece::new(Color::White, Kind::Rook);
+        let square = Square::new(3, 3);
+        let moves = piece.move_piece(square);
+        assert_eq!(moves.len(), 14);
+        assert_eq!(moves[0].file, 4);
+        assert_eq!(moves[0].rank, 3);
+        assert_eq!(moves[1].file, 5);
+        assert_eq!(moves[1].rank, 3);
+        assert_eq!(moves[2].file, 6);
+        assert_eq!(moves[2].rank, 3);
+        assert_eq!(moves[3].file, 7);
+        assert_eq!(moves[3].rank, 3);
+        assert_eq!(moves[4].file, 2);
+        assert_eq!(moves[4].rank, 3);
+        assert_eq!(moves[5].file, 1);
+        assert_eq!(moves[5].rank, 3);
+        assert_eq!(moves[6].file, 0);
+        assert_eq!(moves[6].rank, 3);
+        assert_eq!(moves[7].file, 3);
+        assert_eq!(moves[7].rank, 4);
+        assert_eq!(moves[8].file, 3);
+        assert_eq!(moves[8].rank, 5);
+        assert_eq!(moves[9].file, 3);
+        assert_eq!(moves[9].rank, 6);
+        assert_eq!(moves[10].file, 3);
+        assert_eq!(moves[10].rank, 7);
+        assert_eq!(moves[11].file, 3);
+        assert_eq!(moves[11].rank, 2);
+        assert_eq!(moves[12].file, 3);
+        assert_eq!(moves[12].rank, 1);
+        assert_eq!(moves[13].file, 3);
+        assert_eq!(moves[13].rank, 0);
+    }
+
+    #[test]
+    fn test_piece_move_piece_queen() {
+        let piece = Piece::new(Color::White, Kind::Queen);
+        let square = Square::new(3, 3);
+        let moves = piece.move_piece(square);
+        assert_eq!(moves.len(), 27);
+        assert_eq!(moves[0].file, 4);
+        assert_eq!(moves[0].rank, 3);
+        assert_eq!(moves[1].file, 5);
+        assert_eq!(moves[1].rank, 3);
+        assert_eq!(moves[2].file, 6);
+        assert_eq!(moves[2].rank, 3);
+        assert_eq!(moves[3].file, 7);
+        assert_eq!(moves[3].rank, 3);
+        assert_eq!(moves[4].file, 2);
+        assert_eq!(moves[4].rank, 3);
+        assert_eq!(moves[5].file, 1);
+        assert_eq!(moves[5].rank, 3);
+        assert_eq!(moves[6].file, 0);
+        assert_eq!(moves[6].rank, 3);
+        assert_eq!(moves[7].file, 3);
+        assert_eq!(moves[7].rank, 4);
+        assert_eq!(moves[8].file, 3);
+        assert_eq!(moves[8].rank, 5);
+        assert_eq!(moves[9].file, 3);
+        assert_eq!(moves[9].rank, 6);
+        assert_eq!(moves[10].file, 3);
+        assert_eq!(moves[10].rank, 7);
+        assert_eq!(moves[11].file, 3);
+        assert_eq!(moves[11].rank, 2);
+        assert_eq!(moves[12].file, 3);
+        assert_eq!(moves[12].rank, 1);
+        assert_eq!(moves[13].file, 3);
+        assert_eq!(moves[13].rank, 0);
+        assert_eq!(moves[14].file, 4);
+        assert_eq!(moves[14].rank, 4);
+        assert_eq!(moves[15].file, 5);
+        assert_eq!(moves[15].rank, 5);
+        assert_eq!(moves[16].file, 6);
+        assert_eq!(moves[16].rank, 6);
+        assert_eq!(moves[17].file, 7);
+        assert_eq!(moves[17].rank, 7);
+        assert_eq!(moves[18].file, 2);
+        assert_eq!(moves[18].rank, 2);
+        assert_eq!(moves[19].file, 1);
+        assert_eq!(moves[19].rank, 1);
+        assert_eq!(moves[20].file, 0);
+        assert_eq!(moves[20].rank, 0);
+        assert_eq!(moves[21].file, 4);
+        assert_eq!(moves[21].rank, 2);
+        assert_eq!(moves[22].file, 5);
+        assert_eq!(moves[22].rank, 1);
+        assert_eq!(moves[23].file, 6);
+        assert_eq!(moves[23].rank, 0);
+        assert_eq!(moves[24].file, 2);
+        assert_eq!(moves[24].rank, 4);
+        assert_eq!(moves[25].file, 1);
+        assert_eq!(moves[25].rank, 5);
+        assert_eq!(moves[26].file, 0);
+        assert_eq!(moves[26].rank, 6);
+    }
+
+    #[test]
+    fn test_piece_move_piece_king() {
+        let piece = Piece::new(Color::White, Kind::King);
+        let square = Square::new(3, 3);
+        let moves = piece.move_piece(square);
+        assert_eq!(moves.len(), 8);
+        //  (1, 1),
+        assert_eq!(moves[0].file, 4);
+        assert_eq!(moves[0].rank, 4);
+        //  (1, -1),
+        assert_eq!(moves[1].file, 4);
+        assert_eq!(moves[1].rank, 2);
+        //  (-1, 1),
+        assert_eq!(moves[2].file, 2);
+        assert_eq!(moves[2].rank, 4);
+        //  (-1, -1),
+        assert_eq!(moves[3].file, 2);
+        assert_eq!(moves[3].rank, 2);
+        //  (1, 0),
+        assert_eq!(moves[4].file, 4);
+        assert_eq!(moves[4].rank, 3);
+        //  (-1, 0),
+        assert_eq!(moves[5].file, 2);
+        assert_eq!(moves[5].rank, 3);
+        //  (0, 1),
+        assert_eq!(moves[6].file, 3);
+        assert_eq!(moves[6].rank, 4);
+        //  (0, -1),
+        assert_eq!(moves[7].file, 3);
+        assert_eq!(moves[7].rank, 2);
+    }
+}

@@ -1,74 +1,17 @@
 use super::{
-    game::ChessMove,
+    chess_move::ChessMove,
     pieces::{Color, Kind, Piece},
     square::Square,
 };
 
 pub struct Board {
     squares: [Option<Piece>; 64],
-    castling: [Option<Piece>; 4],
 }
 
 impl Board {
     pub fn default() -> Self {
         Board {
             squares: [
-                Some(Piece::new(Color::White, Kind::Rook)),
-                Some(Piece::new(Color::White, Kind::Knight)),
-                Some(Piece::new(Color::White, Kind::Bishop)),
-                Some(Piece::new(Color::White, Kind::Queen)),
-                Some(Piece::new(Color::White, Kind::King)),
-                Some(Piece::new(Color::White, Kind::Bishop)),
-                Some(Piece::new(Color::White, Kind::Knight)),
-                Some(Piece::new(Color::White, Kind::Rook)),
-                Some(Piece::new(Color::White, Kind::Pawn)),
-                Some(Piece::new(Color::White, Kind::Pawn)),
-                Some(Piece::new(Color::White, Kind::Pawn)),
-                Some(Piece::new(Color::White, Kind::Pawn)),
-                Some(Piece::new(Color::White, Kind::Pawn)),
-                Some(Piece::new(Color::White, Kind::Pawn)),
-                Some(Piece::new(Color::White, Kind::Pawn)),
-                Some(Piece::new(Color::White, Kind::Pawn)),
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-                Some(Piece::new(Color::Black, Kind::Pawn)),
-                Some(Piece::new(Color::Black, Kind::Pawn)),
-                Some(Piece::new(Color::Black, Kind::Pawn)),
-                Some(Piece::new(Color::Black, Kind::Pawn)),
-                Some(Piece::new(Color::Black, Kind::Pawn)),
-                Some(Piece::new(Color::Black, Kind::Pawn)),
-                Some(Piece::new(Color::Black, Kind::Pawn)),
-                Some(Piece::new(Color::Black, Kind::Pawn)),
                 Some(Piece::new(Color::Black, Kind::Rook)),
                 Some(Piece::new(Color::Black, Kind::Knight)),
                 Some(Piece::new(Color::Black, Kind::Bishop)),
@@ -77,19 +20,137 @@ impl Board {
                 Some(Piece::new(Color::Black, Kind::Bishop)),
                 Some(Piece::new(Color::Black, Kind::Knight)),
                 Some(Piece::new(Color::Black, Kind::Rook)),
-            ],
-            // K Q k q
-            castling: [
-                Some(Piece::new(Color::White, Kind::King)),
+                Some(Piece::new(Color::Black, Kind::Pawn)),
+                Some(Piece::new(Color::Black, Kind::Pawn)),
+                Some(Piece::new(Color::Black, Kind::Pawn)),
+                Some(Piece::new(Color::Black, Kind::Pawn)),
+                Some(Piece::new(Color::Black, Kind::Pawn)),
+                Some(Piece::new(Color::Black, Kind::Pawn)),
+                Some(Piece::new(Color::Black, Kind::Pawn)),
+                Some(Piece::new(Color::Black, Kind::Pawn)),
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(Piece::new(Color::White, Kind::Pawn)),
+                Some(Piece::new(Color::White, Kind::Pawn)),
+                Some(Piece::new(Color::White, Kind::Pawn)),
+                Some(Piece::new(Color::White, Kind::Pawn)),
+                Some(Piece::new(Color::White, Kind::Pawn)),
+                Some(Piece::new(Color::White, Kind::Pawn)),
+                Some(Piece::new(Color::White, Kind::Pawn)),
+                Some(Piece::new(Color::White, Kind::Pawn)),
+                Some(Piece::new(Color::White, Kind::Rook)),
+                Some(Piece::new(Color::White, Kind::Knight)),
+                Some(Piece::new(Color::White, Kind::Bishop)),
                 Some(Piece::new(Color::White, Kind::Queen)),
-                Some(Piece::new(Color::Black, Kind::King)),
-                Some(Piece::new(Color::Black, Kind::Queen)),
+                Some(Piece::new(Color::White, Kind::King)),
+                Some(Piece::new(Color::White, Kind::Bishop)),
+                Some(Piece::new(Color::White, Kind::Knight)),
+                Some(Piece::new(Color::White, Kind::Rook)),
             ],
         }
     }
 
     pub fn from_fen(fen: &str) -> Self {
-        unimplemented!()
+        let mut board = Board {
+            squares: [None; 64],
+        };
+        let mut rank = 7;
+        let mut file = 0;
+
+        for c in fen.chars() {
+            match c {
+                ' ' => break,
+                '/' => {
+                    rank -= 1;
+                    file = 0;
+                }
+                '1'..='8' => {
+                    let num_empty_squares = c.to_digit(10).unwrap() as usize;
+                    for _ in 0..num_empty_squares {
+                        board.squares[rank * 8 + file] = None;
+                        file += 1;
+                    }
+                }
+                _ => {
+                    let piece = match c {
+                        'P' => Some(Piece::new(Color::White, Kind::Pawn)),
+                        'N' => Some(Piece::new(Color::White, Kind::Knight)),
+                        'B' => Some(Piece::new(Color::White, Kind::Bishop)),
+                        'R' => Some(Piece::new(Color::White, Kind::Rook)),
+                        'Q' => Some(Piece::new(Color::White, Kind::Queen)),
+                        'K' => Some(Piece::new(Color::White, Kind::King)),
+                        'p' => Some(Piece::new(Color::Black, Kind::Pawn)),
+                        'n' => Some(Piece::new(Color::Black, Kind::Knight)),
+                        'b' => Some(Piece::new(Color::Black, Kind::Bishop)),
+                        'r' => Some(Piece::new(Color::Black, Kind::Rook)),
+                        'q' => Some(Piece::new(Color::Black, Kind::Queen)),
+                        'k' => Some(Piece::new(Color::Black, Kind::King)),
+                        _ => None,
+                    };
+                    if let Some(piece) = piece {
+                        board.squares[rank * 8 + file] = Some(piece);
+                    }
+                    file += 1;
+                }
+            }
+        }
+        board
+    }
+
+    pub fn to_fen(&self) -> String {
+        let mut fen = String::new();
+        let mut empty_count = 0;
+
+        for (i, square) in self.squares.iter().enumerate() {
+            if i % 8 == 0 && i != 0 {
+                if empty_count > 0 {
+                    fen.push_str(&empty_count.to_string());
+                    empty_count = 0;
+                }
+                fen.push('/');
+            }
+
+            match square {
+                Some(piece) => fen.push(piece.as_char()),
+                None => empty_count += 1,
+            }
+        }
+
+        if empty_count > 0 {
+            fen.push_str(&empty_count.to_string());
+        }
+
+        fen
     }
 
     pub fn print_board(&self) -> String {
@@ -209,11 +270,6 @@ impl Board {
     }
 
     pub fn castle(&mut self, color: &Color, kind: &Kind) -> bool {
-        let castling_piece = Piece::new(color.clone(), kind.clone());
-        if !self.castling.contains(&Some(castling_piece)) {
-            return false;
-        }
-
         let king_square = match color {
             Color::White => Square::from_san_str("e1"),
             Color::Black => Square::from_san_str("e8"),
@@ -356,5 +412,11 @@ mod tests {
         );
     }
 
+    #[test]
+    fn test_fen() {
+        let board = Board::default();
+        let fen = board.to_fen();
+        assert_eq!(fen, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    }
     // Add more tests for other board functionalities
 }
