@@ -212,3 +212,75 @@ impl Game {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_game_from_fen() {
+        let game = Game::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        assert!(game.is_ok());
+        let game = game.unwrap();
+        assert_eq!(game.turn, Color::White);
+        assert_eq!(game.half_move, 0);
+        assert_eq!(game.full_move, 1);
+        assert_eq!(
+            game.castling,
+            Some((
+                Some(Piece::new(Color::White, Kind::King)),
+                Some(Piece::new(Color::White, Kind::Queen)),
+                Some(Piece::new(Color::Black, Kind::King)),
+                Some(Piece::new(Color::Black, Kind::Queen))
+            ))
+        );
+        assert_eq!(game.en_passant, None);
+    }
+
+    #[test]
+    fn test_game_to_fen() {
+        let game = Game::new();
+        let fen = game.to_fen();
+        assert_eq!(
+            fen,
+            "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+        );
+    }
+
+    #[test]
+    fn test_game_play_move() {
+        let mut game = Game::new();
+        let success = game.play_move(&Color::White, "e4");
+        assert!(success);
+        let success = game.play_move(&Color::Black, "e5");
+        assert!(success);
+        let success = game.play_move(&Color::White, "Nf3");
+        assert!(success);
+        let success = game.play_move(&Color::Black, "Nc6");
+        assert!(success);
+        let success = game.play_move(&Color::White, "Bb5");
+        assert!(success);
+        let success = game.play_move(&Color::Black, "Bb4");
+        assert!(success);
+        let success = game.play_move(&Color::White, "h3");
+        assert!(success);
+        let success = game.play_move(&Color::Black, "Nf6");
+        assert!(success);
+        let success = game.play_move(&Color::White, "O-O");
+        assert!(success);
+        let success = game.play_move(&Color::Black, "O-O");
+        assert!(success);
+        let success = game.play_move(&Color::White, "d3");
+        assert!(success);
+        let success = game.play_move(&Color::Black, "d6");
+        assert!(success);
+        let success = game.play_move(&Color::White, "c3");
+        assert!(success);
+        let success = game.play_move(&Color::Black, "c6");
+        assert!(success);
+        let success = game.play_move(&Color::White, "Bc4");
+        assert!(success);
+        let success = game.play_move(&Color::Black, "b5");
+        assert!(success);
+    }
+}

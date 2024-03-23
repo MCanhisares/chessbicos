@@ -3,6 +3,7 @@ use super::{
     square::Square,
 };
 
+#[derive(Debug, PartialEq)]
 pub struct ChessMove {
     pub piece: Piece,
     pub from_square: Option<Square>,
@@ -165,5 +166,111 @@ impl ChessMove {
             promotion: None,
             castling: None,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_from_san() {
+        let move1 = ChessMove::from_san(&Color::White, "e4");
+        assert_eq!(
+            move1,
+            Some(ChessMove {
+                piece: Piece::new(Color::White, Kind::Pawn),
+                from_square: None,
+                from_file: None,
+                from_rank: None,
+                to: Some(Square { file: 4, rank: 3 }),
+                promotion: None,
+                castling: None,
+            })
+        );
+
+        let move2 = ChessMove::from_san(&Color::White, "Nf3");
+        assert_eq!(
+            move2,
+            Some(ChessMove {
+                piece: Piece::new(Color::White, Kind::Knight),
+                from_square: None,
+                from_file: None,
+                from_rank: None,
+                to: Some(Square { file: 5, rank: 2 }),
+                promotion: None,
+                castling: None,
+            })
+        );
+
+        let move3 = ChessMove::from_san(&Color::White, "Nge2");
+        assert_eq!(
+            move3,
+            Some(ChessMove {
+                piece: Piece::new(Color::White, Kind::Knight),
+                from_square: None,
+                from_file: Some(6),
+                from_rank: None,
+                to: Some(Square { file: 4, rank: 1 }),
+                promotion: None,
+                castling: None,
+            })
+        );
+
+        let move4 = ChessMove::from_san(&Color::White, "Qe2e3");
+        assert_eq!(
+            move4,
+            Some(ChessMove {
+                piece: Piece::new(Color::White, Kind::Queen),
+                from_square: Some(Square { file: 4, rank: 1 }),
+                from_file: None,
+                from_rank: None,
+                to: Some(Square { file: 4, rank: 2 }),
+                promotion: None,
+                castling: None,
+            })
+        );
+
+        let move5 = ChessMove::from_san(&Color::White, "e8=Q");
+        assert_eq!(
+            move5,
+            Some(ChessMove {
+                piece: Piece::new(Color::White, Kind::Pawn),
+                from_square: None,
+                from_file: None,
+                from_rank: None,
+                to: Some(Square { file: 4, rank: 7 }),
+                promotion: Some(Kind::Queen),
+                castling: None,
+            })
+        );
+
+        let move6 = ChessMove::from_san(&Color::White, "Bxc3");
+        assert_eq!(
+            move6,
+            Some(ChessMove {
+                piece: Piece::new(Color::White, Kind::Bishop),
+                from_square: None,
+                from_file: None,
+                from_rank: None,
+                to: Some(Square { file: 2, rank: 2 }),
+                promotion: None,
+                castling: None,
+            })
+        );
+
+        let move7 = ChessMove::from_san(&Color::White, "exc8=Q");
+        assert_eq!(
+            move7,
+            Some(ChessMove {
+                piece: Piece::new(Color::White, Kind::Pawn),
+                from_square: None,
+                from_file: None,
+                from_rank: None,
+                to: Some(Square { file: 2, rank: 7 }),
+                promotion: Some(Kind::Queen),
+                castling: None,
+            })
+        );
     }
 }
