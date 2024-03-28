@@ -4,6 +4,7 @@ use super::{
     square::Square,
 };
 
+#[derive(PartialEq, Debug)]
 pub struct Board {
     squares: [Option<Piece>; 64],
 }
@@ -80,18 +81,18 @@ impl Board {
         }
     }
 
-    pub fn from_fen(fen: &str) -> Self {
+     pub fn from_fen(fen: &str) -> Self {
         let mut board = Board {
             squares: [None; 64],
         };
-        let mut rank = 7;
+        let mut rank = 0;
         let mut file = 0;
 
         for c in fen.chars() {
             match c {
                 ' ' => break,
                 '/' => {
-                    rank -= 1;
+                    rank += 1;
                     file = 0;
                 }
                 '1'..='8' => {
@@ -417,6 +418,18 @@ mod tests {
         let board = Board::default();
         let fen = board.to_fen();
         assert_eq!(fen, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+    }
+
+    #[test]
+    fn test_from_fen() {
+        let fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        let board = Board::from_fen(fen);
+        assert_eq!(board.squares.len(), 64);
+        assert_eq!(board.squares[0], Some(Piece::new(Color::Black, Kind::Rook)));
+        assert_eq!(
+            board.squares[63],
+            Some(Piece::new(Color::White, Kind::Rook))
+        );
     }
     // Add more tests for other board functionalities
 }
