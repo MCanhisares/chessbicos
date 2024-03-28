@@ -7,6 +7,8 @@ pub mod chess {
     pub mod pieces;
     pub mod square;
     tonic::include_proto!("chess_server"); // The string specified here must match the proto package name
+    pub(crate) const FILE_DESCRIPTOR_SET: &[u8] =
+        tonic::include_file_descriptor_set!("chess_server_descriptor");
 }
 use chess::match_server::{Match, MatchServer};
 use chess::pieces::Color;
@@ -50,37 +52,16 @@ impl Match for MatchService {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr = "[::0]:50051".parse()?;
     let match_service = MatchService {};
+    let service = tonic_reflection::server::Builder::configure()
+        .register_encoded_file_descriptor_set(chess::FILE_DESCRIPTOR_SET)
+        .build()
+        .unwrap();
 
     Server::builder()
+        .add_service(service)
         .add_service(MatchServer::new(match_service))
         .serve(addr)
         .await?;
     Ok(())
 }
 
-// fn main() -> Result<(), Box<dyn std::error::Error>> {
-//     let mut s = String::new();
-//     let mut game = chess::game::Game::new();
-//     print!("Welcome to ChessBic! \n");
-//     while s != "exit" {
-//         let printed_game = game.print_board();
-//         print!("{}", printed_game);
-//         print!("Enter your move: ");
-//         let _ = stdout().flush();
-//         s.clear();
-//         stdin()
-//             .read_line(&mut s)
-//             .expect("Did not enter a correct string");
-//         if let Some('\n') = s.chars().next_back() {
-//             s.pop();
-//         }
-//         if let Some('\r') = s.chars().next_back() {
-//             s.pop();
-//         }
-
-//         game.play_move(&Color::White, s.as_str());
-//         println!("You typed: {}", s);
-//     }
-
-//     Ok(())
-// }

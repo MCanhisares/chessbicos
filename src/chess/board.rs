@@ -81,7 +81,7 @@ impl Board {
         }
     }
 
-     pub fn from_fen(fen: &str) -> Self {
+    pub fn from_fen(fen: &str) -> Self {
         let mut board = Board {
             squares: [None; 64],
         };
@@ -130,29 +130,31 @@ impl Board {
 
     pub fn to_fen(&self) -> String {
         let mut fen = String::new();
-        let mut empty_count = 0;
-
+        let mut empty_squares = 0;
         for (i, square) in self.squares.iter().enumerate() {
-            if i % 8 == 0 && i != 0 {
-                if empty_count > 0 {
-                    fen.push_str(&empty_count.to_string());
-                    empty_count = 0;
-                }
-                fen.push('/');
-            }
-
             match square {
-                Some(piece) => fen.push(piece.as_char()),
-                None => empty_count += 1,
+                None => empty_squares += 1,
+                Some(p) => {
+                    if empty_squares > 0 {
+                        fen.push_str(&empty_squares.to_string());
+                        empty_squares = 0;
+                    }
+                    fen.push(p.as_char());
+                }
+            }
+            if (i + 1) % 8 == 0 {
+                if empty_squares > 0 {
+                    fen.push_str(&empty_squares.to_string());
+                    empty_squares = 0;
+                }
+                if i != 63 {
+                    fen.push('/');
+                }
             }
         }
-
-        if empty_count > 0 {
-            fen.push_str(&empty_count.to_string());
-        }
-
         fen
     }
+
 
     pub fn print_board(&self) -> String {
         let mut board_str = String::new();
@@ -415,9 +417,16 @@ mod tests {
 
     #[test]
     fn test_fen() {
-        let board = Board::default();
+        let mut board = Board::default();
         let fen = board.to_fen();
         assert_eq!(fen, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+
+        let from_square = Square::from_san_str("e2").unwrap();
+        let to_square = Square::from_san_str("e4").unwrap();
+
+        assert!(board.move_piece(&from_square, &to_square, None));
+        let fen = board.to_fen();
+        assert_eq!(fen, "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR");
     }
 
     #[test]

@@ -8,7 +8,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     tonic_build::configure()
         .build_client(true)
         .build_server(true)
-        .file_descriptor_set_path(out_dir.join("chess_descriptor.bin"))
+        .file_descriptor_set_path(out_dir.join("chess_server_descriptor.bin"))
         .compile(&[proto_file], &["proto"])?;
 
     Ok(())
