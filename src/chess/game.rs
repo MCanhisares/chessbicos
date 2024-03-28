@@ -22,6 +22,7 @@ impl fmt::Debug for GameError {
     }
 }
 //Game state represented in FEN notation https://www.chessprogramming.org/Forsyth-Edwards_Notation
+#[derive(PartialEq, Debug)]
 pub struct Game {
     board: Board,
     //b or w
@@ -249,7 +250,8 @@ mod tests {
 
     #[test]
     fn test_game_play_move() {
-        let mut game = Game::new();
+        let mut game =
+            Game::from_fen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").unwrap();
         let success = game.play_move(&Color::White, "e4");
         assert!(success);
         let success = game.play_move(&Color::Black, "e5");
