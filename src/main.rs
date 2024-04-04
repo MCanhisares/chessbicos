@@ -1,5 +1,6 @@
 use chess::game::Game;
 use tonic::{transport::Server, Request, Response, Status};
+use sea_orm::{Database, DatabaseConnection};
 pub mod chess {
     pub mod board;
     pub mod chess_move;
@@ -56,6 +57,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .register_encoded_file_descriptor_set(chess::FILE_DESCRIPTOR_SET)
         .build()
         .unwrap();
+
+    let db: DatabaseConnection = Database::connect("sqlite::memory:").await?;
+    println!("Database connected: {:?}", db);
 
     Server::builder()
         .add_service(service)

@@ -12,6 +12,8 @@ tonic = "0.11"
 tonic-reflection = "0.11.0"
 prost = "0.12"
 tokio = { version = "1.19.2", features = ["macros", "rt-multi-thread"] }
+openssl = { version = "0.10", features = ["vendored"] }
+sea-orm = { version = "0.12", features = [ "sqlx-sqlite", "runtime-tokio-native-tls", "macros" ] } 
 
 [build-dependencies]
 tonic-build = "0.11"
