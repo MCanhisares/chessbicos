@@ -1,6 +1,9 @@
 use chess::game::Game;
+use sea_orm::{DatabaseConnection, DbErr};
 use tonic::{transport::Server, Request, Response, Status};
-use sea_orm::{Database, DatabaseConnection};
+pub mod db{
+    pub mod connector;
+}
 pub mod chess {
     pub mod board;
     pub mod chess_move;
@@ -14,10 +17,13 @@ pub mod chess {
 use chess::match_server::{Match, MatchServer};
 use chess::pieces::Color;
 use chess::{MoveRequest, MoveResponse};
+use db::connector;
 static GAME_FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 #[derive(Debug, Default)]
-pub struct MatchService {}
+pub struct MatchService {
+    db_connection: DatabaseConnection
+}
 
 #[tonic::async_trait]
 impl Match for MatchService {
@@ -25,6 +31,7 @@ impl Match for MatchService {
         &self,
         request: Request<MoveRequest>,
     ) -> Result<Response<MoveResponse>, Status> {
+        
         println!("Got a request: {:?}", request);
         let r = request.into_inner();
         let color = Color::from_str(r.player_color.as_str());
@@ -52,20 +59,19 @@ impl Match for MatchService {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr = "[::0]:50051".parse()?;
-    let match_service = MatchService {};
+    let db = connector::db_connector().await?;
+    let match_service = MatchService {db_connection: db};
     let service = tonic_reflection::server::Builder::configure()
         .register_encoded_file_descriptor_set(chess::FILE_DESCRIPTOR_SET)
         .build()
         .unwrap();
-
-    let db: DatabaseConnection = Database::connect("sqlite::memory:").await?;
-    println!("Database connected: {:?}", db);
 
     Server::builder()
         .add_service(service)
         .add_service(MatchServer::new(match_service))
         .serve(addr)
         .await?;
+
     Ok(())
 }
 

@@ -7,10 +7,6 @@ COPY src /usr/src/app/src/
 COPY proto /usr/src/app/proto/
 WORKDIR /usr/src/app
 
-# DB
-RUN apt-get install sqlite3
-RUN sqlite3
-
 # RUST setup
 RUN rustup target add x86_64-unknown-linux-musl
 RUN apt update && apt install -y musl-tools musl-dev
@@ -25,8 +21,6 @@ COPY --from=builder /usr/src/app/target/x86_64-unknown-linux-musl/release/chessb
 # set run env
 # grpc
 EXPOSE 50051
-# sqlite
-EXPOSE 1433
 
 # run it
 CMD ["/chessbicos-server"]
