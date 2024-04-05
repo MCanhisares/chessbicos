@@ -1,3 +1,7 @@
+# Chess 2.0 - Server
+Project using Rust and gRPC for a Chess server.
+
+
 ## Build db docker
 ```sh
 docker run --network=host --name postgres -e POSTGRES_PASSWORD=admin -d postgres
