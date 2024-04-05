@@ -1,7 +1,13 @@
 ## Build db docker
 ```sh
-docker build -t sqlite ./src/db
-docker run -d -v sqlite_data:/data --network=host --name sqlite sqlite
+docker run --network=host --name postgres -e POSTGRES_PASSWORD=admin -d postgres
+```
+
+## Manually connect to DB
+```sh
+docker exec -it postgres bash
+psql -U postgres
+```
 
 ## Build project docker
 ```sh
@@ -10,11 +16,9 @@ docker run -it --network=host --name chessbicos chessbicos
 ```
 
 ## Clean-up Docker
-
 ```sh
-docker kill sqlite
-docker image rm -f sqlite
-docker container rm sqlite
+docker kill postgres
+docker container rm postgres
 docker kill chessbicos
 docker image rm -f chessbicos
 docker container rm chessbicos
