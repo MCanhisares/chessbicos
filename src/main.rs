@@ -13,6 +13,7 @@ pub mod chess {
 use chess::match_server::{Match, MatchServer};
 use chess::pieces::Color;
 use chess::{MoveRequest, MoveResponse};
+use std::env;
 static GAME_FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 #[derive(Debug, Default)]
@@ -50,7 +51,8 @@ impl Match for MatchService {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr = "[::0]:50051".parse()?;
+    let port = env::var("PORT").unwrap_or_else(|_| "50051".to_string());
+    let addr = format!("[::0]:{}", port).parse()?;
     let match_service = MatchService {};
     let service = tonic_reflection::server::Builder::configure()
         .register_encoded_file_descriptor_set(chess::FILE_DESCRIPTOR_SET)
@@ -64,4 +66,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
     Ok(())
 }
-
