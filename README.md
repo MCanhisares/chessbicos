@@ -4,7 +4,7 @@ Project using Rust and gRPC for a Chess server.
 
 ## Build db docker
 ```sh
-docker run --network=host --name postgres -e POSTGRES_PASSWORD=admin -d postgres
+docker run --name postgres -d -p 5432:5432 -e POSTGRES_PASSWORD=admin postgres
 ```
 
 ## Manually connect to DB
@@ -27,3 +27,7 @@ docker kill chessbicos
 docker image rm -f chessbicos
 docker container rm chessbicos
 ```
+
+## Database schema
+
+https://dbdocs.io/marcel.canhisares/Chessbicos

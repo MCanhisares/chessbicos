@@ -3,17 +3,19 @@ name = "chessbicos"
 version = "0.1.0"
 edition = "2021"
 
-[[bin]] # Bin to run the HelloWorld gRPC server
+[[bin]] 
 name = "chessbicos-server"
 path = "src/main.rs"
 
+[workspace]
+members = [".", "api", "service", "entity", "migration"]
+
 [dependencies]
+api = { path = "api" }
 tonic = "0.11"
-tonic-reflection = "0.11.0"
-prost = "0.12"
 tokio = { version = "1.19.2", features = ["macros", "rt-multi-thread"] }
-openssl = { version = "0.10", features = ["vendored"] }
-sea-orm = { version = "0.12", features = [ "sqlx-postgres", "runtime-tokio-native-tls", "macros" ] } 
+dotenv = "0.15.0"
+
 
 [build-dependencies]
 tonic-build = "0.11"
