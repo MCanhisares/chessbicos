@@ -1,15 +1,15 @@
 mod chess;
-
-use sea_orm::DatabaseConnection;
-use tonic::{transport::Server, Request, Response, Status};
 mod db {
     pub mod connector;
 }
 
 use chess::match_server::{Match, MatchServer};
 use chess::{pieces::Color, MoveRequest, MoveResponse};
-use db::connector;
+use db::connector::{self};
+use migration::{Migrator, MigratorTrait};
+use sea_orm::DatabaseConnection;
 use std::env;
+use tonic::{transport::Server, Request, Response, Status};
 
 use crate::chess::game::Game;
 static GAME_FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -54,6 +54,8 @@ async fn start() -> Result<(), Box<dyn std::error::Error>> {
     let port = env::var("PORT").unwrap_or_else(|_| "50051".to_string());
     let addr = format!("[::0]:{}", port).parse()?;
     let db = connector::db_connector().await?;
+    // create_db(db.clone()).await?;
+    Migrator::up(&db, None).await?;
     let match_service = MatchService { db_connection: db };
     let service = tonic_reflection::server::Builder::configure()
         .register_encoded_file_descriptor_set(chess::FILE_DESCRIPTOR_SET)

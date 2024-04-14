@@ -1,0 +1,4 @@
+pub mod m20240414_000001_create_users_table;
+pub mod m20240414_000002_create_time_control_table;
+pub mod m20240414_000003_create_game_table;
+
