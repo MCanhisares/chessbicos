@@ -3,6 +3,9 @@
     "./Cargo.toml",
     "./api/Cargo.toml",
     "./api/Cargo.toml",
-    "./migration/Cargo.toml"
+    "./migration/Cargo.toml",
+    "./service/Cargo.toml",
+    "./entity/Cargo.toml",
+    "./entity/Cargo.toml"
   ]
 }

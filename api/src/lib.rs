@@ -1,8 +1,8 @@
+mod auth;
 mod chess;
 mod db {
     pub mod connector;
 }
-
 use chess::match_server::{Match, MatchServer};
 use chess::{pieces::Color, MoveRequest, MoveResponse};
 use db::connector::{self};
@@ -10,9 +10,12 @@ use migration::{Migrator, MigratorTrait};
 use sea_orm::DatabaseConnection;
 use std::env;
 use tonic::{transport::Server, Request, Response, Status};
+use auth::service::AuthService;
+use auth::auth_server::AuthServer;
 
 use crate::chess::game::Game;
 static GAME_FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+const FILE_DESCRIPTOR_SET: &[u8] = tonic::include_file_descriptor_set!("chessbicos_descriptor");
 
 #[derive(Debug, Default)]
 pub struct MatchService {
@@ -53,18 +56,19 @@ impl Match for MatchService {
 async fn start() -> Result<(), Box<dyn std::error::Error>> {
     let port = env::var("PORT").unwrap_or_else(|_| "50051".to_string());
     let addr = format!("[::0]:{}", port).parse()?;
-    let db = connector::db_connector().await?;
-    // create_db(db.clone()).await?;
+    let db = connector::db_connector().await?;    
     Migrator::up(&db, None).await?;
-    let match_service = MatchService { db_connection: db };
+    let match_service = MatchService { db_connection: db.clone() };
+    let auth_service = AuthService { db_connection: db.clone() };
     let service = tonic_reflection::server::Builder::configure()
-        .register_encoded_file_descriptor_set(chess::FILE_DESCRIPTOR_SET)
+        .register_encoded_file_descriptor_set(FILE_DESCRIPTOR_SET)
         .build()
         .unwrap();
 
     Server::builder()
         .add_service(service)
         .add_service(MatchServer::new(match_service))
+        .add_service(AuthServer::new(auth_service))
         .serve(addr)
         .await?;
 
