@@ -38,7 +38,7 @@ impl MigrationTrait for Migration {
                             .not_null()
                             .default("active"),
                     )
-                    .col(ColumnDef::new(Game::Moves).string())
+                    .col(ColumnDef::new(Game::Moves).string().not_null().default(""))
                     .col(
                         ColumnDef::new(Game::CreatedAt)
                             .timestamp()

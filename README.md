@@ -28,6 +28,13 @@ docker image rm -f chessbicos
 docker container rm chessbicos
 ```
 
+## Generate Entities
+```sh
+sea-orm-cli generate entity \
+    -u postgres://postgres:admin@localhost:5432/postgres\?sslmode=disable \
+    -o entity/src
+```
+
 ## Database schema
 
 https://dbdocs.io/marcel.canhisares/Chessbicos
