@@ -1,14 +1,14 @@
-use entity::entities::users;
 use sea_orm::DatabaseConnection;
-use service::users::{mutation, query};
-
-use super::{auth_server::Auth, LoginRequest, LoginResponse, RegisterRequest};
 use tonic::{Request, Response, Status};
 
-#[derive(Debug, Default)]
+use service::users::{mutation, query};
+use entity::entities::users;
+
+use super::{auth_server::Auth, LoginRequest, LoginResponse, RegisterRequest, RegisterResponse};
+
 pub struct AuthService {
     pub db_connection: DatabaseConnection,
-}
+} 
 
 impl RegisterRequest {
     pub fn into(self) -> users::Model {
@@ -44,7 +44,7 @@ impl Auth for AuthService {
             return Err(Status::invalid_argument("Invalid username or password"));
         }
         let db_result = db_result.unwrap();
-        let response = super::LoginResponse {
+        let response = LoginResponse {
             token: db_result.id.to_string(),
         };
         Ok(Response::new(response))
@@ -52,8 +52,8 @@ impl Auth for AuthService {
 
     async fn register(
         &self,
-        request: Request<super::RegisterRequest>,
-    ) -> Result<Response<super::RegisterResponse>, Status> {
+        request: Request<RegisterRequest>,
+    ) -> Result<Response<RegisterResponse>, Status> {
         println!("Got a request: {:?}", request);
         let r = request.into_inner();
         let db_result = mutation::Mutation::create_user(&self.db_connection, r.into()).await;
@@ -61,7 +61,7 @@ impl Auth for AuthService {
             return Err(Status::invalid_argument("Invalid username or password"));
         }
         let db_result = db_result.unwrap();
-        let response = super::RegisterResponse {
+        let response = RegisterResponse {
             token: db_result.id.to_string(),
         };
         Ok(tonic::Response::new(response))
